@@ -1,0 +1,78 @@
+# Car wash listings scraper — scheduled aggregation.
+#
+# Runs ONCE DAILY (10:00 UTC), matching the network's free-tier-safe cadence.
+# Staggered after auto repair's 09:45 UTC run to spread GitHub Actions load
+# across the three verticals launched together tonight (see the network's
+# NETWORK-BUILDOUT-AND-RUNCOST.md for why q3h/multi-daily cron is avoided).
+#
+# HOSTED at DentalAI22/carwash-market-scrapers, PUBLIC -> GitHub Actions
+# minutes are unlimited/free. The job pushes back with the default
+# GITHUB_TOKEN (permissions.contents: write) — no PAT needed.
+#
+# Mirrors the veterinary/dental GitHub Action pattern: checkout -> install
+# deps -> run scrapers -> normalize -> commit the updated dataset.
+
+name: Scrape Car Wash Listings
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 10 * * *"    # daily full refresh at 10:00 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scrapers + normalize
+        run: python run_all.py
+
+      - name: Sanity-check dataset (guard the live source of truth)
+        # The live site PULLS this listings.json at build time, so a
+        # collapsed scrape (e.g. every source's runner IP gets blocked in the
+        # same run) must NOT be committed, or it would wipe the site on its
+        # next build. Fail loudly and keep the last-good committed dataset
+        # instead. Unlike higher-volume verticals this floor is intentionally
+        # NOT a large fixed number — per JI's explicit "no minimum listing
+        # count" ruling for this vertical, a small honest inventory (even a
+        # single real listing) is correct and must not be treated as a
+        # failure. This guard only trips on a total wipe to zero.
+        run: |
+          COUNT=$(python -c "import json;print(len(json.load(open('listings.json'))))")
+          echo "listings.json contains $COUNT listings"
+          if [ "$COUNT" -lt 1 ]; then
+            echo "::error::Dataset collapsed to $COUNT listings — refusing to commit; keeping last-good."
+            exit 1
+          fi
+
+      - name: Commit refreshed dataset
+        # This rig is its own GitHub repo (DentalAI22/carwash-market-scrapers,
+        # PUBLIC). It commits ONLY its own tracked files here. It does NOT
+        # reach into the site repo — ../carwash is a SEPARATE git repo.
+        # Instead, the SITE repo PULLS this repo's listings.json at build time
+        # (npm `prebuild` -> scripts/fetch-listings.mjs -> the raw
+        # raw.githubusercontent URL of listings.json below), so a fresh
+        # `vercel --prod` / rebuild republishes with the latest dataset. No
+        # cross-repo push credentials required — the public raw file is the
+        # single source of truth.
+        run: |
+          git config user.name  "carwash-scraper-bot"
+          git config user.email "jonathan@tdibroker.com"
+          git add listings.json output/*.csv site_id_registry.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(carwash): refresh listings $(date -u +%Y-%m-%dT%H:%MZ)"
+            git pull --rebase origin main && git push
+          else
+            echo "No listing changes."
+          fi

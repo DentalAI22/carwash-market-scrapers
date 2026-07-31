@@ -1,0 +1,17 @@
+{
+  "prefix": "TCWM",
+  "base": 1,
+  "next_id": 11,
+  "map": {
+    "calder-344-project-suds-car-wash-platform": 1,
+    "cwb-sonoran-express-1523-e-southern-phoenix-az-85042": 2,
+    "cwb-16843-n-43rd-ave-phoenix-az": 3,
+    "cwb-car-wash-express": 4,
+    "cwb-car-wash-3-express-san-antonio-texas": 5,
+    "cwb-car-wash-express-506-junction-hwy-texas": 6,
+    "cwb-express-carwash-dfw-texas": 7,
+    "cwb-rinse-my-ride-515-e-union-hills-phoenix-az": 8,
+    "cpg-fee-simple-car-wash-in-san-antonio-tx_gptxcw-102": 9,
+    "cpg-operating-express-car-wash-in-north-texas_gptxcw-101": 10
+  }
+}

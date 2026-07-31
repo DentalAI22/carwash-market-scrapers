@@ -1,0 +1,27 @@
+{
+  "_README": "Car wash broker source registry. Mirrors the veterinary rig's broker_codes.json pattern. site_prefix TCWM = The Car Wash Market (feeds thecarwashmarket.com). NEVER collides with dental's TDPM-, veterinary's TVM-, auto repair's TAM-, laundromat's TMM-, or optometry's TASM-. 'ref_prefix' is the source-scoped broker reference shown muted on cards. 'aggregator: true' sources are purged by the normalizer and MUST NEVER be added — BizBuySell, BizQuest, LoopNet, DealStream, and BusinessBroker.net are banned outright and never given an entry here.",
+  "site_prefix": "TCWM",
+  "sources": {
+    "carwashbrokers": {
+      "broker_name": "Car Wash Brokers Inc",
+      "broker_url": "https://www.carwashbrokers.com/property-listing/",
+      "ref_prefix": "CWB",
+      "aggregator": false
+    },
+    "commercialplus": {
+      "broker_name": "Commercial Plus, LLC",
+      "broker_url": "https://commercialplus.com/properties/",
+      "ref_prefix": "CPG",
+      "aggregator": false
+    },
+    "caldercapital": {
+      "broker_name": "Calder Capital",
+      "broker_url": "https://caldergr.com/businesses-for-sale/",
+      "ref_prefix": "CALDER",
+      "aggregator": false
+    }
+  },
+  "blocked_aggregators": [
+    "bizbuysell", "bizquest", "loopnet", "dealstream", "businessbroker"
+  ]
+}
